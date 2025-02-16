@@ -103,6 +103,9 @@ public class ConfigController {
             case ZHIPUAI:
                 saveZhipuChatAIConfig(request);
                 break;
+            case DEEPSEEKAI:
+                saveDeepSeekAIConfig(request);
+                break;
         }
         return ActionResult.isSuccess();
     }
@@ -237,6 +240,24 @@ public class ConfigController {
                 .content(request.getModel()).build();
         configService.createOrUpdate(modelParam);
         TongyiChatAIClient.refresh();
+    }
+
+    /**
+     * save common deepseek ai config
+     *
+     * @param request
+     */
+    private void saveDeepSeekAIConfig(AIConfigCreateRequest request) {
+        SystemConfigParam apikeyParam = SystemConfigParam.builder().code(DeepSeekAIClient.DEEPSEEK_API_KEY)
+                .content(request.getApiKey()).build();
+        configService.createOrUpdate(apikeyParam);
+        SystemConfigParam apiHostParam = SystemConfigParam.builder().code(DeepSeekAIClient.DEEPSEEK_HOST)
+                .content(request.getApiHost()).build();
+        configService.createOrUpdate(apiHostParam);
+        SystemConfigParam modelParam = SystemConfigParam.builder().code(DeepSeekAIClient.DEEPSEEK_MODEL)
+                .content(request.getModel()).build();
+        configService.createOrUpdate(modelParam);
+        DeepSeekAIClient.refresh();
     }
 
     /**
@@ -379,6 +400,15 @@ public class ConfigController {
                 config.setApiKey(Objects.nonNull(zhipuApiKey.getData()) ? zhipuApiKey.getData().getContent() : "");
                 config.setApiHost(Objects.nonNull(zhipuApiHost.getData()) ? zhipuApiHost.getData().getContent() : "");
                 config.setModel(Objects.nonNull(zhipuModel.getData()) ? zhipuModel.getData().getContent() : "");
+                break;
+
+            case DEEPSEEKAI:
+                DataResult<Config> deepSeekApiKey = configService.find(DeepSeekAIClient.DEEPSEEK_API_KEY);
+                DataResult<Config> deepSeekApiHost = configService.find(DeepSeekAIClient.DEEPSEEK_HOST);
+                DataResult<Config> deepSeekModel = configService.find(DeepSeekAIClient.DEEPSEEK_MODEL);
+                config.setApiKey(Objects.nonNull(deepSeekApiKey.getData()) ? deepSeekApiKey.getData().getContent() : "");
+                config.setApiHost(Objects.nonNull(deepSeekApiHost.getData()) ? deepSeekApiHost.getData().getContent() : "");
+                config.setModel(Objects.nonNull(deepSeekModel.getData()) ? deepSeekModel.getData().getContent() : "");
                 break;
             default:
                 break;
