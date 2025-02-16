@@ -250,6 +250,8 @@ public class ChatController {
                 return chatWithTongyiChatAi(queryRequest, sseEmitter, uid);
             case ZHIPUAI:
                 return chatWithZhipuChatAi(queryRequest, sseEmitter, uid);
+            case DEEPSEEK:
+                return chatWithDeepSeekAi(queryRequest, sseEmitter, uid);
         }
         return chatWithOpenAi(queryRequest, sseEmitter, uid);
     }
@@ -817,6 +819,34 @@ public class ChatController {
     private FastChatEmbeddingResponse embeddingWithChat2dbAi(String input) {
         FastChatEmbeddingResponse embeddings = Chat2dbAIClient.getInstance().embeddings(input);
         return embeddings;
+    }
+
+    /**
+     * chat with deepseek ai
+     *
+     * @param queryRequest
+     * @param sseEmitter
+     * @param uid
+     * @return
+     * @throws IOException
+     */
+    private SseEmitter chatWithDeepSeekAi(ChatQueryRequest queryRequest, SseEmitter sseEmitter, String uid) throws IOException {
+        String prompt = buildPrompt(queryRequest);
+        List<DeepSeekChatMessage.Message> messages = new ArrayList<>();
+        DeepSeekChatMessage.Message message = new DeepSeekChatMessage.Message();
+        message.setRole("user");
+        message.setContent(prompt);
+        messages.add(message);
+
+        DeepSeekChatMessage chatMessage = new DeepSeekChatMessage();
+        chatMessage.setMessages(messages);
+
+        buildSseEmitter(sseEmitter, uid);
+
+        DeepSeekAIEventSourceListener sourceListener = new DeepSeekAIEventSourceListener(sseEmitter);
+        DeepSeekAIClient.getInstance().streamCompletions(chatMessage, sourceListener);
+        LocalCache.CACHE.put(uid, messages, LocalCache.TIMEOUT);
+        return sseEmitter;
     }
 
 }
